@@ -215,120 +215,146 @@ Equation: y = 0.29x + 101.3
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // Prediction + Graph update
-  let chart; // keep chart accessible
+  <script>
+    // Background generator
+    (function(){
+      const canvas = document.getElementById('bgCanvas');
+      const ctx = canvas.getContext('2d');
+      const palette = ['#0B6B3A','#117A46','#138B4D','#2EA76A','#6EE7B7','#9FEFD4','#0A3F2E','#154A33'];
 
-  function predictPressure() {
-    const temp = parseFloat(document.getElementById('tempInput').value);
-    if (isNaN(temp)) return;
-
-    const pressure = 0.29 * temp + 101.3;
-    document.getElementById('prediction').innerHTML =
-      `<pre>Predicted Pressure at ${temp}°C = ${pressure.toFixed(2)} kPa</pre>`;
-
-    const maxX = Math.max(90, temp);
-
-    // Update regression line
-    const regressionData = Array.from({ length: maxX + 1 }, (_, i) => ({
-      x: i,
-      y: 0.29 * i + 101.3
-    }));
-
-    const regressionDataset = chart.data.datasets.find(ds => ds.label === "Regression Line");
-    regressionDataset.data = regressionData;
-
-    // Update/add prediction point
-    let predDataset = chart.data.datasets.find(ds => ds.label === "Prediction");
-    if (!predDataset) {
-      predDataset = {
-        label: "Prediction",
-        data: [],
-        borderColor: "#f43f5e",
-        backgroundColor: "#f43f5e",
-        pointRadius: 6,
-        showLine: false
-      };
-      chart.data.datasets.push(predDataset);
-    }
-    predDataset.data = [{ x: temp, y: pressure }];
-
-    chart.update();
-  }
-
-  // Graph setup
-  const ctx = document.getElementById('chart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'scatter',
-    data: {
-      datasets: [
-        {
-          label: 'Observed Data',
-          data: [
-            {x:0,y:101.3},{x:10,y:104.2},{x:20,y:107.1},{x:30,y:110.0},
-            {x:40,y:112.9},{x:50,y:115.8},{x:60,y:118.7},{x:70,y:121.6},
-            {x:80,y:124.5},{x:90,y:127.4}
-          ],
-          borderColor: '#065f46',
-          backgroundColor: '#6ee7b7',
-          pointRadius: 5,
-          showLine: false
-        },
-        {
-          label: 'Regression Line',
-          type: 'line',
-          data: Array.from({ length: 91 }, (_, i) => ({ x: i, y: 0.29 * i + 101.3 })),
-          borderColor: '#10b981',
-          borderWidth: 2,
-          fill: false,
-          pointRadius: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: true } },
-      scales: {
-        x: { title: { display: true, text: 'Temperature (°C)' } },
-        y: { title: { display: true, text: 'Pressure (kPa)' } }
+      function resizeCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawPattern();
       }
-    }
-  });
+      function randInt(min, max){ return Math.floor(Math.random()*(max-min))+min; }
+      function choice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+      function drawPolygon(cx, cy, radius, sides, rotation, fillStyle) {
+        ctx.beginPath();
+        for (let i = 0; i < sides; i++) {
+          const angle = rotation + (i / sides) * Math.PI * 2;
+          const r = radius * (0.7 + Math.random() * 0.6);
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+      }
+      function drawPattern(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = '#04382e';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        const cols = Math.max(6, Math.floor(w / 120));
+        const rows = Math.max(6, Math.floor(h / 120));
+        const cellW = w / cols;
+        const cellH = h / rows;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const cx = c * cellW + cellW * (0.3 + Math.random() * 0.4);
+            const cy = r * cellH + cellH * (0.3 + Math.random() * 0.4);
+            const maxRadius = Math.min(cellW, cellH) * (0.6 + Math.random() * 0.8);
+            const sides = randInt(5, 9);
+            const rot = Math.random() * Math.PI * 2;
+            ctx.globalAlpha = 0.7 * (0.6 + Math.random()*0.6);
+            drawPolygon(cx, cy, maxRadius, sides, rot, choice(palette));
+          }
+        }
+        ctx.globalAlpha = 1;
+        const grad = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.2, w/2, h/2, Math.max(w,h)*0.9);
+        grad.addColorStop(0, 'rgba(0,0,0,0.0)');
+        grad.addColorStop(1, 'rgba(0,0,0,0.25)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0,0,w,h);
+      }
+      let resizeTimer = null;
+      window.addEventListener('resize', ()=> {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(resizeCanvas, 120);
+      });
+      window.addEventListener('load', resizeCanvas);
+    })();
 
-  document.getElementById('year').textContent = new Date().getFullYear();
-</script>
+// Prediction + Dynamic Graph
+let chart;
 
+function regressionY(x) {
+  return 0.29 * x + 101.3; // same regression eqn as in your calculations
+}
 
-    // Prediction
-    function predictPressure() {
-      const temp = parseFloat(document.getElementById('tempInput').value);
-      const pressure = 0.29 * temp + 101.3;
-      document.getElementById('prediction').innerHTML = `<pre>Predicted Pressure at ${temp}°C = ${pressure.toFixed(2)} kPa</pre>`;
-    }
+function predictPressure() {
+  const temp = parseFloat(document.getElementById('tempInput').value);
+  if (isNaN(temp)) return;
+  const pressure = regressionY(temp);
+  document.getElementById('prediction').innerHTML =
+    `<pre>Predicted Pressure at ${temp}°C = ${pressure.toFixed(2)} kPa</pre>`;
 
-    // Graph
-    const ctx = document.getElementById('chart');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: [0,10,20,30,40,50,60,70,80,90],
-        datasets: [{
-          label: 'Pressure (kPa)',
-          data: [101.3,104.2,107.1,110.0,112.9,115.8,118.7,121.6,124.5,127.4],
-          borderColor: '#065f46',
-          backgroundColor: '#6ee7b7',
-          fill: true,
-        }]
+  // extend regression line dynamically
+  const maxX = Math.max(90, temp);
+  const regData = Array.from({length:maxX+1}, (_,i)=>({x:i, y:regressionY(i)}));
+  chart.data.datasets.find(ds=>ds.label==='Regression Line').data = regData;
+
+  // update/add prediction point
+  const predDataset = chart.data.datasets.find(ds=>ds.label==='Prediction');
+  predDataset.data = [{x:temp, y:pressure}];
+
+  chart.update();
+}
+
+// Build chart
+const ctx = document.getElementById('chart').getContext('2d');
+chart = new Chart(ctx, {
+  type:'scatter',
+  data:{
+    datasets:[
+      {
+        label:'Observed Pressure',
+        data:[
+          {x:0,y:101.3},{x:10,y:104.2},{x:20,y:107.1},{x:30,y:110.0},
+          {x:40,y:112.9},{x:50,y:115.8},{x:60,y:118.7},{x:70,y:121.6},
+          {x:80,y:124.5},{x:90,y:127.4}
+        ],
+        backgroundColor:'#6ee7b7',
+        borderColor:'#065f46',
+        pointRadius:5,
+        showLine:false
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: true } },
-        scales: {
-          x: { title: { display: true, text: 'Temperature (°C)' } },
-          y: { title: { display: true, text: 'Pressure (kPa)' } }
-        }
+      {
+        label:'Regression Line',
+        type:'line',
+        data:Array.from({length:91}, (_,i)=>({x:i, y:regressionY(i)})),
+        borderColor:'#10b981',
+        borderWidth:2,
+        fill:false,
+        pointRadius:0
+      },
+      {
+        label:'Prediction',
+        data:[],
+        backgroundColor:'#f43f5e',
+        borderColor:'#f43f5e',
+        pointRadius:7,
+        showLine:false
       }
-    });
+    ]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:true}},
+    scales:{
+      x:{title:{display:true,text:'Temperature (°C)'}},
+      y:{title:{display:true,text:'Pressure (kPa)'}}
+    }
+  }
+});
+
 
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
