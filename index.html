@@ -1,480 +1,255 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Weather Impact on Agriculture — Analysis</title>
-  <!--
-    Modular single-file HTML/CSS/JS
-    - Dark green background, light green panels (aesthetic palette)
-    - Scenario -> Background & Related Concepts -> Detailed Calculations -> Graph -> References
-    - Input box to type a Temperature (°C) and site will predict Pressure (kPa) using linear regression
-    - Calculations section shows step-by-step math for mean, variance, std dev, regression (slope, intercept, R^2)
-    - Inline SVG diagrams + reference photos (replace URLs if you want different images)
-    - Comments throughout to guide customization
-  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Impact on Agriculture</title>
   <style>
-    /* ----------------------
-       Color palette & base layout
-       Dark green background, lighter green panels for contrast
-    ---------------------- */
-    :root{
-      --bg-dark:#053f33;       /* very dark green */
-      --panel:#d9fbe8;         /* pale mint */
-      --panel-2:#a7f3d0;       /* light green */
-      --accent:#065f46;        /* deep green accent for lines/buttons */
-      --muted:#064e3b;        /* heading text color */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #064e3b; /* dark green background */
+      color: #111;
     }
-
-    html,body{height:100%;}
-    body{
-      margin:0;
-      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, 'Helvetica Neue', Arial;
-      background:linear-gradient(180deg,var(--bg-dark), #04382e 120%);
-      color:#052e24;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding:20px;
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
     }
-
-    .container{
-      max-width:1100px;
-      margin:0 auto;
+    header, footer, section {
+      background: #a7f3d0; /* light green containers */
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
     }
-
-    header, footer, section{
-      background:var(--panel);
-      border-radius:12px;
-      padding:18px;
-      margin-bottom:18px;
-      box-shadow:0 8px 20px rgba(2,6,23,0.24);
-      border:1px solid rgba(6,95,70,0.06);
+    h1, h2, h3 {
+      margin-top: 0;
+      color: #064e3b;
     }
-
-    header h1{margin:0; color:var(--muted);}
-    header p{margin:6px 0 0 0; color:var(--accent);}
-
-    nav a{margin-right:14px; text-decoration:none; color:var(--accent); font-weight:600}
-    nav a:hover{text-decoration:underline}
-
-    /* grid layout */
-    .grid{display:grid; grid-template-columns:1fr; gap:16px}
-    @media(min-width:980px){ .grid{grid-template-columns:1fr 2fr; } }
-
-    h2,h3{color:var(--muted);}
-    p{color:#054b3f}
-
-    /* Info boxes and lists */
-    .info-box{background:var(--panel-2); padding:12px; border-radius:10px; border:1px solid rgba(4,56,46,0.06)}
-
-    .small{font-size:0.92rem}
-
-    /* calculation table */
-    table{width:100%; border-collapse:collapse; margin-top:8px}
-    th,td{padding:6px; border-bottom:1px solid rgba(6,95,70,0.06); text-align:right; font-family:monospace}
-    th{background:transparent; text-align:left; color:var(--accent)}
-
-    /* chart area */
-    #chart{width:100%; height:320px}
-
-    /* input and action */
-    .row{display:flex; gap:10px; align-items:center}
-    input[type=number], input[type=text]{padding:8px; border-radius:8px; border:1px solid rgba(6,95,70,0.12); width:160px}
-    button{background:var(--accent); color:#fff; padding:8px 12px; border-radius:8px; border:none; cursor:pointer}
-    button.secondary{background:#064e3b}
-
-    /* diagram styling */
-    .diagram{display:flex; gap:12px; align-items:flex-start}
-    .diagram svg{flex:0 0 320px; background:#e8fff6; border-radius:8px; padding:8px}
-
-    .caption{font-size:0.85rem; color:#065f46}
-
-    /* subtle responsiveness for small screens */
-    @media(max-width:480px){
-      .diagram{flex-direction:column}
-      input[type=number]{width:100%}
+    nav a {
+      margin-right: 1rem;
+      text-decoration: none;
+      color: #065f46;
+      font-weight: bold;
     }
-
+    nav a:hover { text-decoration: underline; }
+    table {
+      border-collapse: collapse;
+      margin: 1rem 0;
+      width: 100%;
+      background: #d1fae5;
+    }
+    table, th, td {
+      border: 1px solid #065f46;
+    }
+    th, td {
+      padding: 6px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+    pre {
+      background: #d1fae5;
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .calc-box {
+      border: 2px solid #065f46;
+      display: inline-block;
+      padding: 4px 8px;
+      background: #6ee7b7;
+      border-radius: 4px;
+      margin: 2px 0;
+    }
+    #chart {
+      width: 100%;
+      height: 240px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-
-    <!-- HEADER -->
     <header>
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <h1>Weather Impact on Local Agriculture — Greenhouse Analysis</h1>
-          <p>Case Scenario 2 — Temperature vs Pressure</p>
+          <h1>Case Scenario 2: Understanding Weather Impact on Local Agriculture</h1>
+          <p style="margin:0; font-size:0.9rem; color:#065f46;">Analyzing the relationship between temperature and pressure in a greenhouse</p>
         </div>
         <nav>
           <a href="#scenario">Scenario</a>
-          <a href="#background">Background</a>
-          <a href="#calculations">Calculations</a>
+          <a href="#concepts">Concepts</a>
+          <a href="#calc">Calculations</a>
           <a href="#graph">Graph</a>
           <a href="#references">References</a>
         </nav>
       </div>
     </header>
 
-    <!-- SCENARIO -->
     <section id="scenario">
       <h2>Scenario Description</h2>
-      <p>A local farmer noticed temperature fluctuations are affecting air pressure inside his greenhouse, impacting crop growth. A nearby farmer faces similar problems — your analysis will help optimize greenhouse conditions to improve yields.</p>
-
-      <div class="info-box small" style="margin-top:12px">
-        <strong>Dataset</strong>
-        <div>Temperatures (°C): <code>[0,10,20,30,40,50,60,70,80,90]</code></div>
-        <div>Pressures (kPa): <code>[101.3,104.2,107.1,110.0,112.9,115.8,118.7,121.6,124.5,127.4]</code></div>
-      </div>
-
+      <p>A local farmer has noticed that temperature fluctuations are affecting the pressure in his greenhouse, which in turn impacts the growth of his crops. He’s asked for help in understanding how temperature changes affect the air pressure inside the greenhouse.</p>
+      <p>A farmer from a nearby town is struggling with maintaining the right conditions in his greenhouse due to varying temperatures. Your group’s analysis of the relationship between temperature and pressure can help him optimize the environment for his crops, potentially improving yields.</p>
     </section>
 
-    <!-- BACKGROUND & RELATED CONCEPTS & DIAGRAMS -->
-    <section id="background">
-      <h2>Background Information & Related Concepts</h2>
+    <section id="concepts">
+  <h2>Background & Related Concepts</h2>
 
-      <!-- Short conceptual overview -->
-      <div class="info-box small" style="margin-bottom:12px">
-        <p><strong>Ideal Gas Law (context):</strong> For a fixed amount of gas in a rigid container, pressure P is proportional to temperature T (in Kelvin): <code>P = (nR/V) * T</code>. In a greenhouse with largely fixed volume and amount of air, an increase in temperature generally raises pressure. The linear regression slope approximates how much pressure (kPa) changes per °C in this dataset; intercept approximates the pressure extrapolated to 0°C in the fitted linear model.</p>
-      </div>
+  <!-- Concepts Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Concept</th>
+        <th>Link</th>
+        <th>Why it’s useful</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Ideal Gas Law</td>
+        <td><a href="https://en.wikipedia.org/wiki/Ideal_gas_law" target="_blank">“Ideal gas law” — Wikipedia</a></td>
+        <td>Gives the basic relation <code>PV = nRT</code> and explains how pressure, volume, and temperature connect.</td>
+      </tr>
+      <tr>
+        <td>Charles’s Law</td>
+        <td><a href="https://en.wikipedia.org/wiki/Charles%27s_law" target="_blank">“Charles’s law” — Wikipedia</a></td>
+        <td>Clearly states how gas expands with temperature when pressure is constant.</td>
+      </tr>
+      <tr>
+        <td>Thermal Expansion / Gas Behavior</td>
+        <td><a href="https://courses.lumenlearning.com/physics/chapter/10-4-relating-pressure-volume-amount-and-temperature-the-ideal-gas-law/" target="_blank">“Relating Pressure, Volume, Amount, and Temperature (Ideal Gas)” — Lumen Learning</a></td>
+        <td>Helps show the direct proportionality between temperature and pressure under constant volume.</td>
+      </tr>
+      <tr>
+        <td>Air Density and Temperature Differences</td>
+        <td><a href="https://www.omicsonline.org/open-access/ideal-gas-law-and-the-greenhouse-effect-2162-0384-1000183.php?aid=89494" target="_blank">“Ideal Gas Law and the Greenhouse Effect” — OMICS / open access article</a></td>
+        <td>Connects density, pressure, and temperature in atmospheric context.</td>
+      </tr>
+      <tr>
+        <td>Greenhouse Effect</td>
+        <td><a href="https://climate.nasa.gov/faq/19/what-is-the-greenhouse-effect/" target="_blank">“What is the greenhouse effect?” — NASA</a></td>
+        <td>A strong, authoritative explanation of how greenhouse gases trap heat.</td>
+      </tr>
+    </tbody>
+  </table>
 
-      <!-- Basic diagrams: inline SVGs to illustrate concept (replace or expand as needed) -->
-      <div class="diagram" style="margin-bottom:12px">
-        <!-- Molecule density diagram (simple) -->
-        <svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg">
-          <!-- greenhouse outline -->
-          <rect x="6" y="6" width="348" height="188" rx="8" fill="#f0fff8" stroke="#065f46" stroke-width="2" />
+  <!-- Related Diagrams / Photos -->
+  <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Ideal-gas-law.svg" 
+         alt="Ideal Gas Law Diagram" 
+         style="max-width:45%; border:2px solid #065f46; border-radius:6px;">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Gas_law_graph.png" 
+         alt="Gas Law Graph" 
+         style="max-width:45%; border:2px solid #065f46; border-radius:6px;">
+  </div>
+</section>
 
-          <!-- sun and thermometer icons left -->
-          <circle cx="60" cy="50" r="18" fill="#fff7ed" stroke="#f59e0b" stroke-width="2" />
-          <text x="60" y="54" font-size="12" text-anchor="middle" fill="#f59e0b">Sun</text>
 
-          <!-- molecule dots rising -->
-          <g fill="#065f46">
-            <circle cx="160" cy="130" r="4" />
-            <circle cx="180" cy="110" r="4" />
-            <circle cx="200" cy="90" r="4" />
-            <circle cx="140" cy="150" r="4" />
-            <circle cx="220" cy="70" r="4" />
-            <circle cx="240" cy="50" r="4" />
-          </g>
+    <section id="calc">
+      <h2>Calculations</h2>
 
-          <text x="100" y="24" font-size="12" fill="#065f46">As temperature ↑, molecules move faster → pressure ↑</text>
-        </svg>
+      <h3>Dataset Table</h3>
+      <table>
+        <tr>
+          <th>X (Temp)</th><th>Y (Pressure)</th><th>X²</th><th>XY</th><th>(X - X̄)</th><th>(X - X̄)²</th>
+        </tr>
+        <tr><td>0</td><td>101.3</td><td>0</td><td>0</td><td>-45</td><td>2025</td></tr>
+        <tr><td>10</td><td>104.2</td><td>100</td><td>1042</td><td>-35</td><td>1225</td></tr>
+        <tr><td>20</td><td>107.1</td><td>400</td><td>2142</td><td>-25</td><td>625</td></tr>
+        <tr><td>30</td><td>110.0</td><td>900</td><td>3300</td><td>-15</td><td>225</td></tr>
+        <tr><td>40</td><td>112.9</td><td>1600</td><td>4516</td><td>-5</td><td>25</td></tr>
+        <tr><td>50</td><td>115.8</td><td>2500</td><td>5790</td><td>5</td><td>25</td></tr>
+        <tr><td>60</td><td>118.7</td><td>3600</td><td>7122</td><td>15</td><td>225</td></tr>
+        <tr><td>70</td><td>121.6</td><td>4900</td><td>8512</td><td>25</td><td>625</td></tr>
+        <tr><td>80</td><td>124.5</td><td>6400</td><td>9960</td><td>35</td><td>1225</td></tr>
+        <tr><td>90</td><td>127.4</td><td>8100</td><td>11466</td><td>45</td><td>2025</td></tr>
+        <tr style="font-weight:bold;"><td>Σ450</td><td>Σ1143.5</td><td>Σ28500</td><td>Σ53850</td><td>Σ0</td><td>Σ8250</td></tr>
+      </table>
 
-        <!-- Graph sketch: conceptual P vs T line -->
-        <svg viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg">
-          <rect x="6" y="6" width="348" height="188" rx="8" fill="#f8fff9" stroke="#065f46" stroke-width="2" />
-          <!-- axes -->
-          <line x1="30" y1="160" x2="320" y2="160" stroke="#065f46" stroke-width="2" />
-          <line x1="50" y1="170" x2="50" y2="30" stroke="#065f46" stroke-width="2" />
+      <h3>Step-by-Step</h3>
+      <p><b>Mean:</b> X̄ = (ΣX)/n = 450/10 = <span class="calc-box">45</span></p>
+      <p><b>Variance:</b> σ² = Σ(X - X̄)² / n = 8250 / 10 = <span class="calc-box">825</span></p>
+      <p><b>Standard Deviation:</b> σ = √825 = <span class="calc-box">28.72</span></p>
+      <p><b>Linear Regression:</b></p>
+      <pre>
+Given:
+ n = 10
+ ΣY = 1143.5
+ ΣXY = 53850
+ ΣX = 450
+ ΣX² = 28500
 
-          <!-- conceptual line -->
-          <polyline points="55,150 100,120 140,100 180,85 220,70 300,55" fill="none" stroke="#10b981" stroke-width="3" />
+Slope: m = [nΣXY - (ΣX)(ΣY)] / [nΣX² - (ΣX)²]
+     = (10*53850 - 450*1143.5) / (10*28500 - 450²)
+     = 0.29
 
-          <text x="180" y="185" font-size="12" text-anchor="middle" fill="#065f46">Temperature (°C) →</text>
-          <text x="12" y="40" font-size="12" transform="rotate(-90 12,40)" fill="#065f46">Pressure (kPa)</text>
-        </svg>
-      </div>
+Intercept: b = (ΣY/n) - m(ΣX/n)
+          = (1143.5/10) - 0.29*(450/10)
+          = 101.3
 
-      <!-- Reference photos (replace these URLs if you want specific images) -->
-      <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
-        <figure style="width:320px; margin:0;">
-          <img src="https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=2d883f9df1b6f6d4b2f6f3ae6a0f3f7e" alt="greenhouse" style="width:100%;border-radius:8px;box-shadow:0 6px 18px rgba(2,6,23,0.18)"/>
-          <figcaption class="caption">Reference photo: greenhouse (source: Unsplash)</figcaption>
-        </figure>
+Equation: y = 0.29x + 101.3
+      </pre>
 
-        <figure style="width:320px;margin:0;">
-          <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=77b0f9d5d18a9f3b5f3e9f5fe6d1b3fb" alt="weather-sensor" style="width:100%;border-radius:8px;box-shadow:0 6px 18px rgba(2,6,23,0.18)"/>
-          <figcaption class="caption">Reference photo: environmental sensors (source: Unsplash)</figcaption>
-        </figure>
-      </div>
-
+      <h3>Prediction Calculator</h3>
+      <label>Enter Temperature (°C): <input id="tempInput" type="number" value="25"></label>
+      <button onclick="predictPressure()">Predict Pressure</button>
+      <div id="prediction"></div>
     </section>
 
-    <!-- CALCULATIONS: mean, variance, std dev, linear regression details -->
-    <section id="calculations">
-      <h2>Calculations & Step-by-step Work</h2>
-      <p class="small">This section shows the full math used to compute the mean, variance, standard deviation, and the linear regression model used to predict pressure from temperature. Numbers are derived from the dataset provided.</p>
-
-      <!-- Controls: input a temperature to predict pressure -->
-      <div style="margin-top:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-        <div class="row">
-          <label for="tempInput" style="font-weight:600;color:var(--accent)">Enter Temperature (°C):</label>
-          <input id="tempInput" type="number" step="0.1" value="25"/>
-          <button id="predictBtn">Predict Pressure</button>
-        </div>
-
-        <div id="predictionOutput" class="info-box small" style="min-width:240px">
-          <strong>Predicted Pressure: </strong>
-          <div id="predictedValue">— kPa</div>
-        </div>
-      </div>
-
-      <hr style="margin:12px 0; border:none; height:1px; background:rgba(6,95,70,0.08)"/>
-
-      <!-- Detailed steps will be injected here by JS -->
-      <div id="calculationSteps" class="small"></div>
-
-    </section>
-
-    <!-- GRAPH: placed after calculations as requested -->
     <section id="graph">
-      <h2>Graph — Data and Regression Line</h2>
-      <p class="small">Scatter of measured pressures and the fitted regression line. The site uses the regression parameters shown in the calculations section.</p>
+      <h2>Graph</h2>
       <canvas id="chart"></canvas>
     </section>
 
-    <!-- RESPONSIBILITIES SECTION (kept for reference) -->
-    <section>
-      <h3>Team Responsibilities</h3>
-      <ul>
-        <li><strong>Digger:</strong> Investigate the ideal gas law and theoretical context.</li>
-        <li><strong>Scribe:</strong> Record data and present steps in the portfolio.</li>
-        <li><strong>Cracker:</strong> Compute regression and interpret results.</li>
-        <li><strong>Skipper:</strong> Coordinate meetings and integrate outputs.</li>
-      </ul>
-    </section>
-
-    <!-- REFERENCES (links that correspond to related concepts) -->
     <section id="references">
-      <h2>References & Further Reading</h2>
+      <h2>References</h2>
       <ul>
-        <li><a href="https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_(Physical_and_Theoretical_Chemistry)/Gas_Laws/Ideal_Gas_Law" target="_blank">Ideal Gas Law — LibreTexts</a></li>
-        <li><a href="https://en.wikipedia.org/wiki/Ideal_gas_law" target="_blank">Ideal Gas Law — Wikipedia</a></li>
-        <li><a href="https://en.wikipedia.org/wiki/Linear_regression" target="_blank">Linear Regression — Wikipedia</a></li>
-        <li><a href="https://www.mdpi.com/2073-4433/11/1/96" target="_blank">Greenhouse environmental control studies (example)</a></li>
+        <li><a href="https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_(Physical_and_Theoretical_Chemistry)/Gas_Laws/Ideal_Gas_Law" target="_blank">Ideal Gas Law - LibreTexts</a></li>
+        <li><a href="https://www.sciencedirect.com/topics/earth-and-planetary-sciences/greenhouse-gases" target="_blank">Greenhouse Gases - ScienceDirect</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Linear_regression" target="_blank">Linear Regression - Wikipedia</a></li>
       </ul>
     </section>
 
     <footer>
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap">
-        <div>Modular greenhouse analysis — swap components as needed.</div>
-        <div>© <span id="year"></span></div>
-      </div>
+      <p>Weather & Agriculture Analysis — Modular Framework</p>
+      <p>© <span id="year"></span></p>
     </footer>
-
   </div>
 
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    // ----------------------
-    // Data (from user-provided dataset)
-    // ----------------------
-    const temps = [0,10,20,30,40,50,60,70,80,90];
-    const pressures = [101.3,104.2,107.1,110.0,112.9,115.8,118.7,121.6,124.5,127.4];
-
-    // Utility: format numbers consistently
-    function fmt(n, dp=4){
-      return (Math.round(n * Math.pow(10,dp)) / Math.pow(10,dp)).toFixed(dp);
+    // Prediction function using regression equation
+    function predictPressure() {
+      const temp = parseFloat(document.getElementById('tempInput').value);
+      const pressure = 0.29 * temp + 101.3;
+      document.getElementById('prediction').innerHTML = `<pre>Predicted Pressure at ${temp}°C = ${pressure.toFixed(2)} kPa</pre>`;
     }
 
-    // ----------------------
-    // Compute mean, variance (pop & sample), std dev, and regression parameters.
-    // We'll compute step-by-step arrays and then render into the DOM.
-    // ----------------------
-    function computeStatisticsAndRegression(xArr, yArr){
-      const n = xArr.length;
-
-      // Means
-      const xMean = xArr.reduce((s,v)=>s+v,0)/n;
-      const yMean = yArr.reduce((s,v)=>s+v,0)/n;
-
-      // Arrays for stepwise values
-      const diffs = [];
-      let sumSqY = 0; // for variance
-      let sumProd = 0; // sum of (xi-xmean)*(yi-ymean)
-      let sumSqX = 0; // sum of (xi-xmean)^2
-
-      for(let i=0;i<n;i++){
-        const xi = xArr[i];
-        const yi = yArr[i];
-        const dx = xi - xMean;
-        const dy = yi - yMean;
-        const prod = dx * dy;
-        const dx2 = dx * dx;
-        const dy2 = dy * dy;
-        diffs.push({xi, yi, dx, dy, prod, dx2, dy2});
-        sumProd += prod;
-        sumSqX += dx2;
-        sumSqY += dy2;
-      }
-
-      // Population and sample variance for Y
-      const variance_pop = sumSqY / n;
-      const variance_sample = sumSqY / (n - 1);
-      const sd_pop = Math.sqrt(variance_pop);
-      const sd_sample = Math.sqrt(variance_sample);
-
-      // Regression slope & intercept
-      const slope = sumProd / sumSqX; // m
-      const intercept = yMean - slope * xMean; // b
-
-      // Predicted values, residuals, SSR, SSE, SST for R^2
-      let SSR = 0; // explained sum squares
-      let SSE = 0; // residual sum squares
-      const preds = [];
-      for(let i=0;i<n;i++){
-        const yi = yArr[i];
-        const yHat = slope * xArr[i] + intercept;
-        preds.push(yHat);
-        SSR += Math.pow((yHat - yMean), 2);
-        SSE += Math.pow((yi - yHat), 2);
-      }
-      const SST = sumSqY;
-      const r2 = SSR / SST;
-
-      return {
-        n, xMean, yMean, diffs, sumSqX, sumProd, variance_pop, variance_sample, sd_pop, sd_sample, slope, intercept, preds, SSR, SSE, SST, r2
-      };
-    }
-
-    // Render detailed steps into the calculations section
-    function renderCalculations(){
-      const out = document.getElementById('calculationSteps');
-      const res = computeStatisticsAndRegression(temps, pressures);
-
-      // Create HTML with step-by-step values
-      let html = '';
-      html += `<h3>Dataset summary</h3>`;
-      html += `<div class="info-box small">n = ${res.n}<br/>Mean temperature (x̄) = ${fmt(res.xMean,4)} °C<br/>Mean pressure (ȳ) = ${fmt(res.yMean,4)} kPa</div>`;
-
-      // Table of per-point calculations
-      html += `<h3 style="margin-top:10px">Step-by-step table</h3>`;
-      html += `<div style="overflow:auto"><table><thead><tr><th>Temp (°C)</th><th>Pressure (kPa)</th><th>(x - x̄)</th><th>(y - ȳ)</th><th>(x-x̄)(y-ȳ)</th><th>(x-x̄)^2</th></tr></thead><tbody>`;
-
-      for(let i=0;i<res.n;i++){
-        const row = res.diffs[i];
-        html += `<tr><td style="text-align:left">${row.xi}</td><td>${row.yi.toFixed(4)}</td><td>${fmt(row.dx,4)}</td><td>${fmt(row.dy,4)}</td><td>${fmt(row.prod,4)}</td><td>${fmt(row.dx2,4)}</td></tr>`;
-      }
-      html += `</tbody></table></div>`;
-
-      // Sums & variance
-      html += `<h3 style="margin-top:12px">Summaries</h3>`;
-      html += `<div class="info-box small">Sum (x - x̄)(y - ȳ) = ${fmt(res.sumProd,6)}<br/>Sum (x - x̄)^2 = ${fmt(res.sumSqX,6)}</div>`;
-
-      // Variance and std dev
-      html += `<h3 style="margin-top:12px">Variance & Standard Deviation</h3>`;
-      html += `<div class="info-box small">Population variance (σ²) = Σ(y - ȳ)² / n = ${fmt(res.variance_pop,6)} kPa²<br/>Population std. dev. (σ) = ${fmt(res.sd_pop,6)} kPa<br/>Sample variance (s²) = Σ(y - ȳ)² / (n-1) = ${fmt(res.variance_sample,6)} kPa²<br/>Sample std. dev. (s) = ${fmt(res.sd_sample,6)} kPa</div>`;
-
-      // Regression results
-      html += `<h3 style="margin-top:12px">Linear Regression (Least Squares)</h3>`;
-      html += `<div class="info-box small">Slope (m) = Σ(x - x̄)(y - ȳ) / Σ(x - x̄)² = ${fmt(res.slope,6)} kPa/°C<br/>Intercept (b) = ȳ - m·x̄ = ${fmt(res.intercept,6)} kPa</div>`;
-
-      // Show predictions and R^2
-      html += `<h3 style="margin-top:12px">Predictions & Goodness of fit</h3>`;
-      html += `<div class="info-box small">R² = SSR / SST = ${fmt(res.r2,6)} (higher is better; 1.0 = perfect fit)</div>`;
-
-      // Show predicted values per x and residuals
-      html += `<h3 style="margin-top:12px">Predicted values and residuals</h3>`;
-      html += `<div style="overflow:auto"><table><thead><tr><th>Temp</th><th>Observed P</th><th>Predicted ŷ</th><th>Residual (y - ŷ)</th></tr></thead><tbody>`;
-      for(let i=0;i<res.n;i++){
-        const yHat = res.preds[i];
-        const resid = pressures[i] - yHat;
-        html += `<tr><td style="text-align:left">${temps[i]}</td><td>${pressures[i].toFixed(4)}</td><td>${fmt(yHat,6)}</td><td>${fmt(resid,6)}</td></tr>`;
-      }
-      html += `</tbody></table></div>`;
-
-      // Interpretation text
-      html += `<h3 style="margin-top:12px">Interpretation</h3>`;
-      html += `<p class="small">The slope tells how many <em>kPa</em> the pressure increases per <em>1°C</em> increase in temperature (for the greenhouse and assumptions in this dataset). The intercept is the predicted pressure when temperature = 0°C according to the fitted line. Compare the slope with theoretical expectations from the Ideal Gas Law (P ∝ T in Kelvin); since our regression uses °C, interpretations must consider the zero-offset when converting to Kelvin.</p>`;
-
-      out.innerHTML = html;
-
-      // After rendering, also compute an internal function for direct predictions
-      // and display initial predicted value for the default input value.
-      updatePrediction();
-    }
-
-    // Predict pressure for a single temperature using the regression model
-    function predictPressure(temp){
-      const res = computeStatisticsAndRegression(temps, pressures);
-      return res.slope * temp + res.intercept;
-    }
-
-    // Handle UI prediction input
-    function updatePrediction(){
-      const t = parseFloat(document.getElementById('tempInput').value);
-      if (isNaN(t)) return;
-      const p = predictPressure(t);
-      document.getElementById('predictedValue').textContent = `${p.toFixed(4)} kPa`;
-
-      // also add a temporary marker to the chart
-      if (window.myChart){
-        // update the prediction dataset (index 2) with new point
-        const ds = window.myChart.data.datasets.find(d=>d.label==='Prediction');
-        if (ds){
-          ds.data = [{x:t, y:p}];
-          window.myChart.update();
+    // Graph
+    const ctx = document.getElementById('chart');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [0,10,20,30,40,50,60,70,80,90],
+        datasets: [{
+          label: 'Pressure (kPa)',
+          data: [101.3,104.2,107.1,110.0,112.9,115.8,118.7,121.6,124.5,127.4],
+          borderColor: '#065f46',
+          backgroundColor: '#6ee7b7',
+          fill: true,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: true } },
+        scales: {
+          x: { title: { display: true, text: 'Temperature (°C)' } },
+          y: { title: { display: true, text: 'Pressure (kPa)' } }
         }
       }
-    }
-
-    // ----------------------
-    // Chart: scatter (data points) + regression line + prediction marker
-    // ----------------------
-    function makeChart(){
-      // Prepare scatter data
-      const scatterData = temps.map((t,i)=>({x:t, y:pressures[i]}));
-
-      // Compute regression line points across the range
-      const res = computeStatisticsAndRegression(temps, pressures);
-      const lineX = [];
-      for(let x=0;x<=90;x+=5) lineX.push(x);
-      const lineData = lineX.map(x=>({x:x, y: res.slope*x + res.intercept}));
-
-      const ctx = document.getElementById('chart').getContext('2d');
-      window.myChart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-          datasets: [
-            {
-              label:'Observed Pressure',
-              data: scatterData,
-              backgroundColor: 'rgba(6,95,70,0.9)',
-              pointRadius:6
-            },
-            {
-              label:'Fitted line',
-              data: lineData,
-              type:'line',
-              showLine:true,
-              fill:false,
-              borderColor: 'rgba(16,185,129,0.9)',
-              tension:0.1,
-              pointRadius:0
-            },
-            {
-              label:'Prediction',
-              data:[],
-              backgroundColor:'rgba(244,63,94,1)',
-              pointRadius:8
-            }
-          ]
-        },
-        options: {
-          scales: {
-            x: { title: { display:true, text:'Temperature (°C)' } },
-            y: { title: { display:true, text:'Pressure (kPa)' } }
-          },
-          plugins: { legend:{display:true} }
-        }
-      });
-    }
-
-    // Initialization on page load
-    document.addEventListener('DOMContentLoaded', ()=>{
-      renderCalculations();
-      makeChart();
-
-      // wire up input and button
-      document.getElementById('tempInput').addEventListener('input', updatePrediction);
-      document.getElementById('predictBtn').addEventListener('click', updatePrediction);
-      document.getElementById('year').textContent = new Date().getFullYear();
     });
 
+    document.getElementById('year').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>
