@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Weather Impact on Agriculture</title>
   <style>
+    #bgCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #064e3b; /* dark green background */
+      background: #064e3b;
       color: #111;
     }
     .container {
@@ -17,7 +23,7 @@
       padding: 1rem;
     }
     header, footer, section {
-      background: #a7f3d0; /* light green containers */
+      background: #a7f3d0;
       border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1rem;
@@ -66,10 +72,15 @@
       width: 100%;
       height: 240px;
     }
+    html, body { height: 100%; overflow-x: hidden; }
   </style>
 </head>
 <body>
+  <!-- Background -->
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
   <div class="container">
+    <!-- Header -->
     <header>
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
@@ -86,69 +97,57 @@
       </div>
     </header>
 
+    <!-- Scenario -->
     <section id="scenario">
       <h2>Scenario Description</h2>
       <p>A local farmer has noticed that temperature fluctuations are affecting the pressure in his greenhouse, which in turn impacts the growth of his crops. He’s asked for help in understanding how temperature changes affect the air pressure inside the greenhouse.</p>
       <p>A farmer from a nearby town is struggling with maintaining the right conditions in his greenhouse due to varying temperatures. Your group’s analysis of the relationship between temperature and pressure can help him optimize the environment for his crops, potentially improving yields.</p>
     </section>
 
+    <!-- Concepts -->
     <section id="concepts">
-  <h2>Background & Related Concepts</h2>
+      <h2>Background & Related Concepts</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Link</th>
+            <th>Why it's useful</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ideal Gas Law</td>
+            <td><a href="https://en.wikipedia.org/wiki/Ideal_gas_law" target="_blank" rel="noreferrer">Wikipedia</a></td>
+            <td>Gives the relation <code>PV = nRT</code> linking pressure, volume, and temperature.</td>
+          </tr>
+          <tr>
+            <td>Charles's Law</td>
+            <td><a href="https://en.wikipedia.org/wiki/Charles%27s_law" target="_blank" rel="noreferrer">Wikipedia</a></td>
+            <td>Explains how gas expands with temperature when pressure is constant.</td>
+          </tr>
+          <tr>
+            <td>Thermal Expansion</td>
+            <td><a href="https://courses.lumenlearning.com/suny-albany-chemistry/chapter/relating-pressure-volume-amount-and-temperature-the-ideal-gas-law/" target="_blank" rel="noreferrer">Lumen Learning</a></td>
+            <td>Shows proportionality between temperature and pressure under constant volume.</td>
+          </tr>
+          <tr>
+            <td>Air Density & Temperature</td>
+            <td><a href="https://www.omicsonline.org/open-access/ideal-gas-law-and-the-greenhouse-effect-2157-7617-1000468-101034.html" target="_blank" rel="noreferrer">OMICS Article</a></td>
+            <td>Connects density, pressure, and temperature in greenhouse context.</td>
+          </tr>
+          <tr>
+            <td>Greenhouse Effect</td>
+            <td><a href="https://climate.nasa.gov/faq/19/what-is-the-greenhouse-effect/" target="_blank" rel="noreferrer">NASA</a></td>
+            <td>Explains how greenhouse gases trap heat.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
 
-  <!-- Concepts Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>Concept</th>
-        <th>Link</th>
-        <th>Why it’s useful</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Ideal Gas Law</td>
-        <td><a href="https://en.wikipedia.org/wiki/Ideal_gas_law" target="_blank">“Ideal gas law” — Wikipedia</a></td>
-        <td>Gives the basic relation <code>PV = nRT</code> and explains how pressure, volume, and temperature connect.</td>
-      </tr>
-      <tr>
-        <td>Charles’s Law</td>
-        <td><a href="https://en.wikipedia.org/wiki/Charles%27s_law" target="_blank">“Charles’s law” — Wikipedia</a></td>
-        <td>Clearly states how gas expands with temperature when pressure is constant.</td>
-      </tr>
-     <tr>
-		<td>Thermal Expansion / Gas Behavior</td>
-		<td><a href="https://courses.lumenlearning.com/suny-albany-chemistry/chapter/relating-pressure-volume-amount-and-temperature-the-ideal-gas-law/" target="_blank">“Relating Pressure, Volume, Amount, and Temperature (Ideal Gas)” — Lumen Learning / PressBooks</a></td>
-		<td>Helps show the direct proportionality between temperature and pressure under constant volume.</td>
-	</tr>
-	<tr>
-		<td>Air Density and Temperature Differences</td>
-		<td><a href="https://www.omicsonline.org/open-access/ideal-gas-law-and-the-greenhouse-effect-2157-7617-1000468-101034.html" target="_blank">“Ideal Gas Law and the Greenhouse Effect” — OMICS Open Access Article</a></td>
-		<td>Connects density, pressure, and temperature in atmospheric / greenhouse context.</td>
-	</tr>
-
-      <tr>
-        <td>Greenhouse Effect</td>
-        <td><a href="https://climate.nasa.gov/faq/19/what-is-the-greenhouse-effect/" target="_blank">“What is the greenhouse effect?” — NASA</a></td>
-        <td>A strong, authoritative explanation of how greenhouse gases trap heat.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- Related Diagrams / Photos -->
-  <div style="display:flex; gap:1rem; flex-wrap:wrap; margin-top:1rem;">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Ideal-gas-law.svg" 
-         alt="Ideal Gas Law Diagram" 
-         style="max-width:45%; border:2px solid #065f46; border-radius:6px;">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/3e/Gas_law_graph.png" 
-         alt="Gas Law Graph" 
-         style="max-width:45%; border:2px solid #065f46; border-radius:6px;">
-  </div>
-</section>
-
-
+    <!-- Calculations -->
     <section id="calc">
       <h2>Calculations</h2>
-
       <h3>Dataset Table</h3>
       <table>
         <tr>
@@ -166,60 +165,141 @@
         <tr><td>90</td><td>127.4</td><td>8100</td><td>11466</td><td>45</td><td>2025</td></tr>
         <tr style="font-weight:bold;"><td>Σ450</td><td>Σ1143.5</td><td>Σ28500</td><td>Σ53850</td><td>Σ0</td><td>Σ8250</td></tr>
       </table>
-
       <h3>Step-by-Step</h3>
       <p><b>Mean:</b> X̄ = (ΣX)/n = 450/10 = <span class="calc-box">45</span></p>
       <p><b>Variance:</b> σ² = Σ(X - X̄)² / n = 8250 / 10 = <span class="calc-box">825</span></p>
       <p><b>Standard Deviation:</b> σ = √825 = <span class="calc-box">28.72</span></p>
       <p><b>Linear Regression:</b></p>
       <pre>
-Given:
- n = 10
- ΣY = 1143.5
- ΣXY = 53850
- ΣX = 450
- ΣX² = 28500
+n = 10
+ΣY = 1143.5
+ΣXY = 53850
+ΣX = 450
+ΣX² = 28500
 
-Slope: m = [nΣXY - (ΣX)(ΣY)] / [nΣX² - (ΣX)²]
-     = (10*53850 - 450*1143.5) / (10*28500 - 450²)
-     = 0.29
-
-Intercept: b = (ΣY/n) - m(ΣX/n)
-          = (1143.5/10) - 0.29*(450/10)
-          = 101.3
-
+Slope m = 0.29
+Intercept b = 101.3
 Equation: y = 0.29x + 101.3
       </pre>
-
       <h3>Prediction Calculator</h3>
       <label>Enter Temperature (°C): <input id="tempInput" type="number" value="25"></label>
       <button onclick="predictPressure()">Predict Pressure</button>
       <div id="prediction"></div>
     </section>
 
+    <!-- Graph -->
     <section id="graph">
       <h2>Graph</h2>
       <canvas id="chart"></canvas>
     </section>
 
-    <section id="references">
-      <h2>References</h2>
-      <ul>
-        <li><a href="https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_(Physical_and_Theoretical_Chemistry)/Gas_Laws/Ideal_Gas_Law" target="_blank">Ideal Gas Law - LibreTexts</a></li>
-        <li><a href="https://www.sciencedirect.com/topics/earth-and-planetary-sciences/greenhouse-gases" target="_blank">Greenhouse Gases - ScienceDirect</a></li>
-        <li><a href="https://en.wikipedia.org/wiki/Linear_regression" target="_blank">Linear Regression - Wikipedia</a></li>
-      </ul>
-    </section>
+    <!-- References -->
+    <!-- References -->
+	<section id="references">
+	<h2>References</h2>
+		<ul>
+			<li><a href="https://en.wikipedia.org/wiki/Ideal_gas_law" target="_blank" rel="noreferrer">Ideal Gas Law — Wikipedia</a></li>
+			<li><a href="https://en.wikipedia.org/wiki/Charles%27s_law" target="_blank" rel="noreferrer">Charles's Law — Wikipedia</a></li>
+			<li><a href="https://courses.lumenlearning.com/suny-albany-chemistry/chapter/relating-pressure-volume-amount-and-temperature-the-ideal-gas-law/" target="_blank" rel="noreferrer">Relating Pressure, Volume, Amount, and Temperature (Ideal Gas) — Lumen Learning</a></li>
+			<li><a href="https://www.omicsonline.org/open-access/ideal-gas-law-and-the-greenhouse-effect-2157-7617-1000468-101034.html" target="_blank" rel="noreferrer">Ideal Gas Law and the Greenhouse Effect — OMICS Open Access</a></li>
+			<li><a href="https://climate.nasa.gov/faq/19/what-is-the-greenhouse-effect/" target="_blank" rel="noreferrer">What is the Greenhouse Effect? — NASA</a></li>
+		</ul>
+	</section>
 
+
+    <!-- Footer -->
     <footer>
-      <p>Weather & Agriculture Analysis — Modular Framework</p>
+      <p>Physics Digital Task 2 — VIBE TRIBE</p>
       <p>© <span id="year"></span></p>
     </footer>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    // Prediction function using regression equation
+<script>
+  // Prediction + Graph update
+  let chart; // keep chart accessible
+
+  function predictPressure() {
+    const temp = parseFloat(document.getElementById('tempInput').value);
+    if (isNaN(temp)) return;
+
+    const pressure = 0.29 * temp + 101.3;
+    document.getElementById('prediction').innerHTML =
+      `<pre>Predicted Pressure at ${temp}°C = ${pressure.toFixed(2)} kPa</pre>`;
+
+    const maxX = Math.max(90, temp);
+
+    // Update regression line
+    const regressionData = Array.from({ length: maxX + 1 }, (_, i) => ({
+      x: i,
+      y: 0.29 * i + 101.3
+    }));
+
+    const regressionDataset = chart.data.datasets.find(ds => ds.label === "Regression Line");
+    regressionDataset.data = regressionData;
+
+    // Update/add prediction point
+    let predDataset = chart.data.datasets.find(ds => ds.label === "Prediction");
+    if (!predDataset) {
+      predDataset = {
+        label: "Prediction",
+        data: [],
+        borderColor: "#f43f5e",
+        backgroundColor: "#f43f5e",
+        pointRadius: 6,
+        showLine: false
+      };
+      chart.data.datasets.push(predDataset);
+    }
+    predDataset.data = [{ x: temp, y: pressure }];
+
+    chart.update();
+  }
+
+  // Graph setup
+  const ctx = document.getElementById('chart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Observed Data',
+          data: [
+            {x:0,y:101.3},{x:10,y:104.2},{x:20,y:107.1},{x:30,y:110.0},
+            {x:40,y:112.9},{x:50,y:115.8},{x:60,y:118.7},{x:70,y:121.6},
+            {x:80,y:124.5},{x:90,y:127.4}
+          ],
+          borderColor: '#065f46',
+          backgroundColor: '#6ee7b7',
+          pointRadius: 5,
+          showLine: false
+        },
+        {
+          label: 'Regression Line',
+          type: 'line',
+          data: Array.from({ length: 91 }, (_, i) => ({ x: i, y: 0.29 * i + 101.3 })),
+          borderColor: '#10b981',
+          borderWidth: 2,
+          fill: false,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: true } },
+      scales: {
+        x: { title: { display: true, text: 'Temperature (°C)' } },
+        y: { title: { display: true, text: 'Pressure (kPa)' } }
+      }
+    }
+  });
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+
+    // Prediction
     function predictPressure() {
       const temp = parseFloat(document.getElementById('tempInput').value);
       const pressure = 0.29 * temp + 101.3;
